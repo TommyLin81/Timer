@@ -5,88 +5,119 @@ class Timer extends Component{
     constructor(props){
         super(props)
         this.state={
-            setMinute:0,
-            setSecond:0,
-            total:0
+            Minute:0,
+            Second:0,
+            totalTime:0,
+            timingState:false
         }
+        //setInterval用的flag
         this.flag=0
     }
 
+    //使用者輸入分鐘
     changeMin = (e)=>{
-        //只取int
-        let locMin = parseInt(e.target.value)
+        //只允許輸入數字
+        let locMin = parseInt(e.target.value.replace(/\D+/g,''))
+        if(isNaN(locMin)){locMin=0}
+        //限制分鐘上線
         if(locMin > 60){
             locMin = 60
         }
-
-        let newTotalTime = locMin*60 + this.state.setSecond
-
+        //重新計算總時間
+        let newTotalTime = locMin*60 + this.state.Second
         this.setState({
-            setMinute:locMin,
-            total:newTotalTime
+            Minute:locMin,
+            totalTime:newTotalTime
         })
-        console.log(this.state)
     }
-    
-    changeSec = (e)=>{
-        //只取int
-        let locSec = parseInt(e.target.value)
 
+    //使用者輸入秒數
+    changeSec = (e)=>{
+        //只允許輸入數字
+        let locSec = parseInt(e.target.value.replace(/\D+/g,''))
+        if(isNaN(locSec)){locSec=0}
+        //限制秒數上線
         if(locSec > 60){ 
             locSec = 60 
         }
-
-        let newTotalTime = this.state.setMinute*60 + locSec
-
+        //重新計算總時間
+        let newTotalTime = this.state.Minute*60 + locSec
         this.setState({
-            setSecond:locSec,
-            total:newTotalTime
+            Second:locSec,
+            totalTime:newTotalTime
         })
-        
-        console.log(this.state)
     }
 
-    timer=()=>{
+    //開始計時
+    timing=()=>{
+        //改變計時狀態(影響按紐的顯示狀態)
+        this.setState({
+            timingState:true
+        })
+        //倒數計時並儲存flag
         this.flag = setInterval(() => {
             this.setState({
-                total: this.state.total - 1
+                totalTime: this.state.totalTime - 1
             })
-            //如果勝0秒結束倒數
-            if(this.state.total === 0){
-                clearInterval(this.flag);
+            //如果剩0秒結束倒數
+            if(this.state.totalTime === 0){
+                this.reset()
             }
         }, 1000);
     }
+    
+    //暫停計時
+    stop=()=>{
+        //改變計時狀態(影響按紐的顯示狀態)
+        this.setState({
+            timingState:false
+        })
+        //停止倒數
+        clearInterval(this.flag);
+    }
 
     reset=()=>{
-        clearInterval(this.flag);
+        //改變計時狀態(影響按紐的顯示狀態), 並重置時間
+        let originalTotalTime = this.state.Minute*60 + this.state.Second
         this.setState({
-            total: 0
+            totalTime: originalTotalTime,
+            timingState:false
         })
+        //停止倒數
+        clearInterval(this.flag)
     }
 
     render(){
-        //無條件捨去
-        let timerMin = Math.floor(this.state.total / 60)
-        let timerSec = this.state.total % 60
+        //取計時用的分鐘(無條件捨去)
+        let timerMin = Math.floor(this.state.totalTime / 60)
+        //取計時用的秒數
+        let timerSec = this.state.totalTime % 60
         
 
         return(
         <div>
             <h2> Tommy 計時器! </h2>
+            <h4>請設定時間(最多60分60秒):</h4>
             <input
-                value={this.state.setMinute}
+                value={this.state.Minute}
                 onChange={this.changeMin}
-            />
+            />分
             <input
-                value={this.state.setSecond}
+                value={this.state.Second}
                 onChange={this.changeSec}
-            />
+            />秒
             <dir>
                 <h2>{timerMin}分:{timerSec} 秒</h2>
                 <div>
-                    <button onClick={this.timer}>
-                        開始
+                    <button 
+                        onClick={this.timing}
+                        disabled={this.state.timingState === true ? "disabled" : ""}
+                    >   開始
+                    </button>
+                    <button 
+                        onClick={this.stop}
+                        disabled={this.state.timingState === true ? "" : "disabled"}
+                    >   暫停
                     </button>
                     <button onClick={this.reset}>
                         重新
